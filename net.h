@@ -350,23 +350,30 @@ void receive_response(request &http_request)
     }
 }
 
-// Can not use wstring because the encoding
-// was defined by the page on the remote server
-buffer_t read_data(request &http_request)
+size_t query_data_avaliable(request &http_request)
 {
     DWORD size = 0;
-    DWORD downloaded = 0;
-
     if (!WinHttpQueryDataAvailable(http_request, &size))
     {
         throw error(L"Error (WinHttpQueryDataAvailable)", GetLastError());
     }
+    return size;
+}
 
+buffer_t read_data(request &http_request, size_t size = 0)
+{
+    DWORD downloaded = 0;
+
+    if (size == 0)
+    {
+        size = query_data_avaliable(http_request);
+    }
     std::vector<char> buffer;
     buffer.resize(size);
     if (!WinHttpReadData(http_request,
                          (LPVOID)&buffer[0],
-                         size, &downloaded))
+                         size, 
+                         &downloaded))
     {
         throw error(L"Error (WinHttpReadData)", GetLastError());
     }
@@ -374,17 +381,25 @@ buffer_t read_data(request &http_request)
     return buffer;
 }
 
-buffer_t send_get_request(const url &dest_url, const std::wstring &user_agent = L"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)")
+// Can not use wstring because the encoding is defined by the the remote server
+buffer_t fetch_request(const url &dest_url, const std::wstring &user_agent = L"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)")
 {
     LOG(L"make_request " + dest_url.get_text());
     auto http_session = make_session(user_agent);
     detect_proxy(http_session, dest_url);
     auto http_connection = make_connection(http_session, dest_url);
+
     auto http_request = make_request(http_connection, L"GET", dest_url);
     send_request(http_request);
     receive_response(http_request);
 
-    return read_data(http_request);
+    buffer_t buffer;
+    while(size_t size = query_data_avaliable(http_request) != 0)
+    {
+        auto chunk = read_data(http_request, size);
+        buffer.insert(std::end(buffer), std::begin(chunk), std::end(chunk));
+    }
+    return buffer;
 }
 
 } // namespace net
