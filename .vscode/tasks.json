@@ -27,6 +27,15 @@
                     "message": 5
                 }
             }
+        },
+        {
+            "label": "Clean program",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ],
+            "problemMatcher": []
         }
     ]
 }

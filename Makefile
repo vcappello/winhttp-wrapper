@@ -10,7 +10,7 @@ EXECUTABLE = $(OUT_DIR)/test.exe
 # Compiler flags
 INCLUDE_PATH = -I.
 DEFINE_SYMBOL = -D_UNICODE -DUNICODE -DWIN32 -D_WINDOWS
-CFLAGS = -c -O2 -Wall -Wextra -pedantic-errors -std=c++17 -g $(INCLUDE_PATH) $(DEFINE_SYMBOL) -mwindows
+CFLAGS = -c -O1 -Wall -Wextra -pedantic-errors -std=c++17 -ggdb $(INCLUDE_PATH) $(DEFINE_SYMBOL) -mwindows
 
 # Linker Flags
 LDFLAGS = -lwinhttp
